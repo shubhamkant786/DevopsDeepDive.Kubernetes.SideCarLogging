@@ -1,0 +1,84 @@
+services:
+  elasticsearch:
+    image: elasticsearch:7.8.1
+    container_name: elasticsearch
+    hostname: elasticsearch
+    restart: unless-stopped
+    ports:
+      - 9200:9200
+    mem_limit: 2g
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    environment:
+      cluster.name: 'elasticsearch'
+      discovery.type: 'single-node'
+      xpack.security.enabled: 'false'
+      ELASTIC_PASSWORD: 'elasticpwd'
+      ES_JAVA_OPTS: '-Xmx2g -Xms2g' 
+    networks:
+      - external
+      - internal
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s http://localhost:9200 | grep -q 'cluster_name'",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+    # command: >
+    #   bash ./bin/elasticpwd --username kibana_system -i <enter the kibana_system Password>
+  kibana:
+    image: kibana:7.8.1
+    container_name: kibana
+    hostname: kibana
+    environment:
+      ELASTICSEARCH_HOSTS: 'http://elasticsearch:9200'
+      ELASTICSEARCH_USERNAME: 'elastic'
+      ELASTICSEARCH_PASSWORD: 'elasticpwd'
+      TELEMETRY_OPTIN: false
+      xpack.security.enabled: false
+      server.host: "0.0.0.0"
+    mem_limit: 2g
+    ports:
+      - 5601:5601
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    volumes:
+      - ./kibana.yml:/usr/share/kibana/config/kibana.yml
+    networks:
+      - external
+      - internal
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s -I http://localhost:5601 | grep -q 'HTTP/1.1 302 Found'",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+  devopsdeepdive.kubernetes.sidecarlogging.weather.api:
+    image: ${DOCKER_REGISTRY-}shubhamkantdocker786/sidecarloggingweatherapi
+    container_name: "devopsdeepdive.kubernetes.sidecarlogging.weather.api"
+    build:
+      context: .
+      dockerfile: DevopsDeepDive.Kubernetes.SideCarLogging.Weather.API/Dockerfile
+      tags:
+        - shubhamkantdocker786/sidecarloggingweatherapi:1.0.0
+        - shubhamkantdocker786/sidecarloggingweatherapi:latest      
+    networks:
+      - internal
+      - external
+    volumes:
+      - /application-logs:/application-logs
+networks:
+  external:
+    name: elasticsearch_network
+  internal:
+    name: elasticsearch_internal_network
+  

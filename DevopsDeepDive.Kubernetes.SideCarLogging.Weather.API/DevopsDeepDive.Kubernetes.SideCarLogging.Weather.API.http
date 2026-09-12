@@ -1,0 +1,6 @@
+@DevopsDeepDive.Kubernetes.SideCarLogging.Weather.API_HostAddress = http://localhost:5167
+
+GET {{DevopsDeepDive.Kubernetes.SideCarLogging.Weather.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

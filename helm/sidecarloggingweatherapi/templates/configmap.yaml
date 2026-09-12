@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluentd-config
+data:
+  fluent.conf: |
+    <source>
+      @type tail
+      path /app/application-logs/*.log
+      pos_file /app/application-logs/app.log.pos
+      tag app.logs
+      <parse>
+        @type json
+        time_key timestamp
+        time_format %Y-%m-%dT%H:%M:%S.%NZ
+      </parse>
+    </source>
+
+    <filter app.logs>
+      @type record_transformer
+      <record>
+        hostname "#{Socket.gethostname}"
+        pod_name "#{ENV['HOSTNAME']}"
+        namespace "#{ENV['POD_NAMESPACE']}"
+      </record>
+    </filter>
+
+    <match app.logs>
+      @type elasticsearch
+      host "#{ENV['FLUENT_ELASTICSEARCH_HOST']}"
+      port "#{ENV['FLUENT_ELASTICSEARCH_PORT']}"
+      logstash_format true
+      logstash_prefix app-logs
+      <buffer>
+        @type file
+        path /var/log/fluentd/buffer
+        flush_mode interval
+        flush_interval 5s
+        retry_max_interval 30
+        retry_forever true
+      </buffer>
+    </match>
