@@ -32,6 +32,10 @@ Update the deployment.yaml file in the helm chart to include the sidecar contain
 Updathe the configmap.yaml file in the helm chart to include the fluentd configuration for shipping logs to elasticsearch.
 Note: Choose the logfile path given in the serilog file sink
 
+First check the chart created are good
+helm lint ./sidecarloggingweatherapi
+
+Now deploy chart to K8
 helm install weather-sidecar-fluentd-r1 ./sidecarloggingweatherapi
 NAME: weather-sidecar-fluentd-r1
 LAST DEPLOYED: Sat Sep 12 21:11:57 2026

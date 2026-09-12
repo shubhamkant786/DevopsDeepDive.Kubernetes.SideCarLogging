@@ -3,11 +3,11 @@ kind: Deployment
 metadata:
   name: {{ include "sidecarloggingweatherapi.fullname" . }}
   labels:
-    {{- include "sidecarloggingweatherapi.labels" . | nindent 4 }}
+    {{ include "sidecarloggingweatherapi.labels" . | nindent 4 }}
 spec:
-  {{- if not .Values.autoscaling.enabled }}
+  {{ if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
-  {{- end }}
+  {{ end }}
   selector:
     matchLabels:
       {{- include "sidecarloggingweatherapi.selectorLabels" . | nindent 6 }}
@@ -40,7 +40,7 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{- .Values.image.pullPolicy }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
@@ -64,30 +64,30 @@ spec:
         - name: fluentd
           image: fluent/fluentd:v1.16-1
           volumeMounts:
-          - name: logs
-            mountPath: /var/log/app
-            readOnly: true
-          - name: fluentd-config
-            mountPath: /fluentd/etc
-         env:
-          - name: FLUENT_ELASTICSEARCH_HOST
-            value: "elasticsearch:9200"
-          - name: FLUENT_ELASTICSEARCH_PORT
-            value: "9200"
-          - name: POD_NAMESPACE
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.namespace 
-      {{- with .Values.volumes }}
+            - name: logs
+              mountPath: /var/log/app
+              readOnly: true
+            - name: fluentd-config
+              mountPath: /fluentd/etc
+          env:
+            - name: FLUENT_ELASTICSEARCH_HOST
+              value: "elasticsearch:9200"
+            - name: FLUENT_ELASTICSEARCH_PORT
+              value: "9200"
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
       volumes:
+        - name: logs
+          emptyDir: {}
+        - name: fluentd-config
+          configMap:
+            name: fluentd-config
+        {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
       {{- with .Values.nodeSelector }}
-       - name: logs
-         emptyDir: {}
-       - name: fluentd-config
-         configMap:
-           name: fluentd-config
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
