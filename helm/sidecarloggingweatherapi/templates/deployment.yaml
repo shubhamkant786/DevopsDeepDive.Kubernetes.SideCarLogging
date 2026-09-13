@@ -62,7 +62,7 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
         - name: fluentd
-          image: fluent/fluentd:v1.16-1
+          image: fluent/fluentd-kubernetes-daemonset:v1.19.3-debian-elasticsearch7-1.1
           volumeMounts:
             - name: logs
               mountPath: /var/log/app
